@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Network Packet Analyzer</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; margin: 20px; }
+        h2 { color: #38bdf8; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; background: #1e293b; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #334155; }
+        th { background: #334155; color: #38bdf8; }
+        tr:hover { background: #475569; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 12px; }
+        .tcp { background: #22c55e; color: #000; }
+        .udp { background: #eab308; color: #000; }
+        .icmp { background: #ef4444; color: #fff; }
+    </style>
+</head>
+<body>
+    <h2>📡 Network Packet Analyzer Dashboard</h2>
+    <p>Live Traffic Monitoring (Auto-refreshes every 2 seconds)</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Source IP</th>
+                <th>Destination IP</th>
+                <th>Protocol</th>
+                <th>Length (Bytes)</th>
+            </tr>
+        </thead>
+        <tbody id="packet-table">
+            <tr><td colspan="4">Loading network packets...</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        async function fetchPackets() {
+            try {
+                const res = await fetch('/api/packets');
+                const packets = await res.json();
+                const tableBody = document.getElementById('packet-table');
+                tableBody.innerHTML = '';
+
+                packets.forEach(p => {
+                    let badgeClass = p.protocol.toLowerCase();
+                    if (!['tcp', 'udp', 'icmp'].includes(badgeClass)) badgeClass = '';
+                    
+                    const row = `<tr>
+                        <td>${p.src}</td>
+                        <td>${p.dst}</td>
+                        <td><span class="badge ${badgeClass}">${p.protocol}</span></td>
+                        <td>${p.length}</td>
+                    </tr>`;
+                    tableBody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error("Error fetching packets:", err);
+            }
+        }
+
+        setInterval(fetchPackets, 2000);
+        fetchPackets();
+    </script>
+</body>
+</html>
